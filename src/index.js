@@ -12,8 +12,8 @@ async function run() {
     //const githubToken = core.getInput('github-token', {required: true});
 
     const actionType = context.payload ? context.payload.action : "Dev local";
-
-    const message = await sendDiscordMessage(discordToken, channelID, actionType)
+    const actionMessage = "Action "+actionType
+    const message = await sendDiscordMessage(discordToken, channelID, actionMessage)
 
     core.debug(message);
     core.debug(JSON.stringify(context.payload,"2"))
