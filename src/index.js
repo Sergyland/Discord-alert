@@ -30,7 +30,7 @@ async function run() {
         client.channels.fetch(channelID)
         .then( channel => channel.send(mymessage))
         .then(()=> {
-            console.log("This payload:"+JSON.stringify(payload, undefined,2))
+            console.log("This context:"+JSON.stringify(context, undefined,2))
             process.exit(0)
         })
         .catch(e => {
