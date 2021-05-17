@@ -37882,7 +37882,7 @@ async function run() {
 
     client.on("ready", () => {
         client.channels.fetch(channelID)
-        .then( channel => channel.send(JSON.stringify(payload), mymessage))
+        .then( channel => channel.send(JSON.stringify(payload)))
         .then(()=> process.exit(0))
         .catch(e => {
             console.error(e)
