@@ -13,8 +13,6 @@ if(!process.env.GITHUB_ACTIONS){
     context = github.context 
 }
 
-let payload = context.payload
-
 
 const channelID = core.getInput('channel-id', {required: true});
 const discordToken = core.getInput('discord-token', {required: true});
@@ -24,13 +22,13 @@ async function run() {
     let client = new Discord.Client()
     client.login(discordToken)
 
-    let mymessage = new Discord.MessageEmbed(createMessage(payload))
+    let mymessage = new Discord.MessageEmbed(createMessage(context))
 
     client.on("ready", () => {
         client.channels.fetch(channelID)
         .then( channel => channel.send(mymessage))
-        .then(()=> {
-            console.log("This context:"+JSON.stringify(context, undefined,2))
+        .then(() => {
+            console.log("Message Sent!")
             process.exit(0)
         })
         .catch(e => {

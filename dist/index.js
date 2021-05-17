@@ -37599,19 +37599,33 @@ function socketOnError() {
 /***/ 4553:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
+const { context } = __nccwpck_require__(3030)
 const Discord = __nccwpck_require__(5973)
 
-function createMessage(payload) {
-    if(!payload) throw new Error("No context passed to the message constructor")
+function createMessage(context) {
+    if(!context) {
+        throw new Error("No context passed to the message constructor")
+    }
+    
     let message = new Discord.MessageEmbed()
+
+    let payload = context.payload;
     let {login, avatar_url, html_url} = payload.sender
-    message.setAuthor(login, avatar_url, html_url)
+    message.setAuthor(login, avatar_url, html_url);
+
+    let {eventName, sha, workflow} = context;
+    message.setTitle(eventName + " triggered " + workflow)
     .setTimestamp()
+    .addField("SHA", sha)
+    .addField("Repo", payload.repository.html_url)
     .setFooter("Created by discord-alert, the github action!")
     
     return message;
 }
 
+function createMessageTitle(context) {
+    let {eventName} = context
+}
 module.exports = createMessage
 
 /***/ }),
@@ -37870,8 +37884,6 @@ if(!process.env.GITHUB_ACTIONS){
     context = github.context 
 }
 
-let payload = context.payload
-
 
 const channelID = core.getInput('channel-id', {required: true});
 const discordToken = core.getInput('discord-token', {required: true});
@@ -37881,13 +37893,13 @@ async function run() {
     let client = new Discord.Client()
     client.login(discordToken)
 
-    let mymessage = new Discord.MessageEmbed(createMessage(payload))
+    let mymessage = new Discord.MessageEmbed(createMessage(context))
 
     client.on("ready", () => {
         client.channels.fetch(channelID)
         .then( channel => channel.send(mymessage))
-        .then(()=> {
-            console.log("This context:"+JSON.stringify(context, undefined,2))
+        .then(() => {
+            console.log("Message Sent!")
             process.exit(0)
         })
         .catch(e => {

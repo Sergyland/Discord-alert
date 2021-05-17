@@ -1,4 +1,4 @@
-name: 'Discord alert'
+name: 'Discord-alert'
 description: 'This action sends discord message after certain event on your repo.'
 inputs:
   github-token:
