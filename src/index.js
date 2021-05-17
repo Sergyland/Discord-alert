@@ -2,6 +2,7 @@ const core = require('@actions/core');
 const github = require('@actions/github');
 const context = github.context;
 const Discord = require('discord.js');
+const createMessage = require('./createMessage.js')
 
 var payload;
 
@@ -17,27 +18,21 @@ const discordToken = core.getInput('discord-token', {required: true});
 //const githubToken = core.getInput('github-token', {required: true});
 
 async function run() {
-    const actionType = payload.action
-    const message = await sendDiscordMessage(discordToken, channelID, actionType)
-    //console.log(message)
-    //console.log(JSON.stringify(context.payload,"2"))
-}
+    let client = new Discord.Client()
+    client.login(discordToken)
 
-async function sendDiscordMessage(discordToken, channelID, messageContent) {
-    const client = new Discord.Client();
-    client.login(discordToken);
+    let mymessage = new Discord.MessageEmbed(createMessage(payload))
 
-    client.once("ready", async () => {
-        try {
-            console.debug("Discord bot is ready")
-            let channel = await client.channels.fetch(channelID);
-            let message = await channel.send(messageContent);
-            process.exit(0)
-         } catch(e) {
-             console.error("Error occured during message delivery", e)
-             process.exit(1)
-         }
+    client.on("ready", () => {
+        client.channels.fetch(channelID)
+        .then( channel => channel.send(JSON.stringify(payload), mymessage))
+        .then(()=> process.exit(0))
+        .catch(e => {
+            console.error(e)
+            process.exit(1)
+        })
     })
+
 }
 
 run()

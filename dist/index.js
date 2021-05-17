@@ -5,7 +5,7 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"action":"local dev"}');
+module.exports = JSON.parse('{"action":"local dev","sender":{"login":"localhost","avatar_url":"https://avatars1.githubusercontent.com/u/21031067?v=4","html_url":"https://github.com/Sergyland/Discord-alert"}}');
 
 /***/ }),
 
@@ -37596,6 +37596,26 @@ function socketOnError() {
 
 /***/ }),
 
+/***/ 4553:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const Discord = __nccwpck_require__(5973)
+
+function createMessage(payload) {
+    if(!payload) throw new Error("No context passed to the message constructor")
+    let message = new Discord.MessageEmbed()
+    let {login, avatar_url, html_url} = payload.sender
+    message.setAuthor(login, avatar_url, html_url)
+    .setTimestamp()
+    .setFooter("Created by discord-alert, the github action!")
+    
+    return message;
+}
+
+module.exports = createMessage
+
+/***/ }),
+
 /***/ 1269:
 /***/ ((module) => {
 
@@ -37839,6 +37859,7 @@ const core = __nccwpck_require__(2186);
 const github = __nccwpck_require__(5438);
 const context = github.context;
 const Discord = __nccwpck_require__(5973);
+const createMessage = __nccwpck_require__(4553)
 
 var payload;
 
@@ -37854,27 +37875,21 @@ const discordToken = core.getInput('discord-token', {required: true});
 //const githubToken = core.getInput('github-token', {required: true});
 
 async function run() {
-    const actionType = payload.action
-    const message = await sendDiscordMessage(discordToken, channelID, actionType)
-    //console.log(message)
-    //console.log(JSON.stringify(context.payload,"2"))
-}
+    let client = new Discord.Client()
+    client.login(discordToken)
 
-async function sendDiscordMessage(discordToken, channelID, messageContent) {
-    const client = new Discord.Client();
-    client.login(discordToken);
+    let mymessage = new Discord.MessageEmbed(createMessage(payload))
 
-    client.once("ready", async () => {
-        try {
-            console.debug("Discord bot is ready")
-            let channel = await client.channels.fetch(channelID);
-            let message = await channel.send(messageContent);
-            process.exit(0)
-         } catch(e) {
-             console.error("Error occured during message delivery", e)
-             process.exit(1)
-         }
+    client.on("ready", () => {
+        client.channels.fetch(channelID)
+        .then( channel => channel.send(JSON.stringify(payload), mymessage))
+        .then(()=> process.exit(0))
+        .catch(e => {
+            console.error(e)
+            process.exit(1)
+        })
     })
+
 }
 
 run()
