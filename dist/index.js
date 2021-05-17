@@ -1,11 +1,11 @@
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 4568:
+/***/ 7747:
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"action":"local dev","sender":{"login":"localhost","avatar_url":"https://avatars1.githubusercontent.com/u/21031067?v=4","html_url":"https://github.com/Sergyland/Discord-alert"}}');
+module.exports = JSON.parse('{"github":{"action":"Local dev","action_path":"mypc","actor":"Localhost","event":{},"event_name":"Manual trigger","event_path":""},"payload":{"action":"local dev","sender":{"login":"localhost","avatar_url":"https://avatars1.githubusercontent.com/u/21031067?v=4","html_url":"https://github.com/Sergyland/Discord-alert"}}}');
 
 /***/ }),
 
@@ -37857,18 +37857,21 @@ var __webpack_exports__ = {};
 (() => {
 const core = __nccwpck_require__(2186);
 const github = __nccwpck_require__(5438);
-const context = github.context;
+
 const Discord = __nccwpck_require__(5973);
 const createMessage = __nccwpck_require__(4553)
 
-var payload;
+let context;
 
 if(!process.env.GITHUB_ACTIONS){ 
     __nccwpck_require__(2437).config()
-    payload = __nccwpck_require__(4568)
+    context = __nccwpck_require__(7747)
 } else {
-    payload = context.payload
+    context = github.context 
 }
+
+let payload = context.payload
+
 
 const channelID = core.getInput('channel-id', {required: true});
 const discordToken = core.getInput('discord-token', {required: true});
@@ -37882,7 +37885,7 @@ async function run() {
 
     client.on("ready", () => {
         client.channels.fetch(channelID)
-        .then( channel => channel.send(JSON.stringify(payload)))
+        .then( channel => channel.send(JSON.stringify(context)))
         .then(()=> process.exit(0))
         .catch(e => {
             console.error(e)

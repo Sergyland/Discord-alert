@@ -1,17 +1,20 @@
 const core = require('@actions/core');
 const github = require('@actions/github');
-const context = github.context;
+
 const Discord = require('discord.js');
 const createMessage = require('./createMessage.js')
 
-var payload;
+let context;
 
 if(!process.env.GITHUB_ACTIONS){ 
     require('dotenv').config()
-    payload = require('../dev/payload.json')
+    context = require('../dev/context.json')
 } else {
-    payload = context.payload
+    context = github.context 
 }
+
+let payload = context.payload
+
 
 const channelID = core.getInput('channel-id', {required: true});
 const discordToken = core.getInput('discord-token', {required: true});
@@ -25,7 +28,7 @@ async function run() {
 
     client.on("ready", () => {
         client.channels.fetch(channelID)
-        .then( channel => channel.send(JSON.stringify(payload)))
+        .then( channel => channel.send(JSON.stringify(context)))
         .then(()=> process.exit(0))
         .catch(e => {
             console.error(e)
