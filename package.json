@@ -2,7 +2,6 @@
   "name": "discord-action",
   "version": "0.1.0",
   "description": "A github action that sends messages on discord.",
-  "type": "module",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
