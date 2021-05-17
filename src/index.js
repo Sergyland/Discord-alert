@@ -32,10 +32,10 @@ async function sendDiscordMessage(discordToken, channelID, messageContent) {
             console.debug("Discord bot is ready")
             let channel = await client.channels.fetch(channelID);
             let message = await channel.send(messageContent);
-            return message
+            process.exit(0)
          } catch(e) {
              console.error("Error occured during message delivery", e)
-             throw e
+             process.exit(1)
          }
     })
 }
