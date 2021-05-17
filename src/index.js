@@ -1,5 +1,6 @@
 const core = require('@actions/core');
-const { context } = require('@actions/github');
+const github = require('@actions/github');
+const context = github.context;
 const Discord = require('discord.js');
 
 if(!process.env.GITHUB_ACTIONS){ 
@@ -15,8 +16,10 @@ async function run() {
     const actionMessage = "Action "+actionType
     const message = await sendDiscordMessage(discordToken, channelID, actionMessage)
 
-    core.debug(message);
-    core.debug(JSON.stringify(context.payload,"2"))
+    console.log(message);
+    console.log(JSON.stringify(context.payload,"2"))
+
+    process.exit(0)
 }
 
 async function sendDiscordMessage(discordToken, channelID, messageContent) {
@@ -30,4 +33,5 @@ async function sendDiscordMessage(discordToken, channelID, messageContent) {
     })
 }
 
-run();
+run().then(() => process.exit(0))
+    .catch((e) => console.error(e));

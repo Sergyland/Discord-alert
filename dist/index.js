@@ -37828,7 +37828,8 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
 const core = __nccwpck_require__(2186);
-const { context } = __nccwpck_require__(5438);
+const github = __nccwpck_require__(5438);
+const context = github.context;
 const Discord = __nccwpck_require__(5973);
 
 if(!process.env.GITHUB_ACTIONS){ 
@@ -37844,8 +37845,10 @@ async function run() {
     const actionMessage = "Action "+actionType
     const message = await sendDiscordMessage(discordToken, channelID, actionMessage)
 
-    core.debug(message);
-    core.debug(JSON.stringify(context.payload,"2"))
+    console.log(message);
+    console.log(JSON.stringify(context.payload,"2"))
+
+    process.exit(0)
 }
 
 async function sendDiscordMessage(discordToken, channelID, messageContent) {
@@ -37859,7 +37862,8 @@ async function sendDiscordMessage(discordToken, channelID, messageContent) {
     })
 }
 
-run();
+run().then(() => process.exit(0))
+    .catch((e) => console.error(e));
 })();
 
 module.exports = __webpack_exports__;
