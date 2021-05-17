@@ -28,7 +28,7 @@ async function run() {
 
     client.on("ready", () => {
         client.channels.fetch(channelID)
-        .then( channel => channel.send(JSON.stringify(context)))
+        .then( channel => channel.send(mymessage))
         .then(()=> process.exit(0))
         .catch(e => {
             console.error(e)
