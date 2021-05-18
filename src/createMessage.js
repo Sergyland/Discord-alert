@@ -20,7 +20,7 @@ function createMessage(context) {
     .addField("Job", `${context.job}#${context.runNumber}`)
     .addField("SHA", sha)
     .addField("Repo", payload.repository.html_url)
-    .setFooter("Made with ❤", "https://img.shields.io/badge/Sergyland-Dicord--Alert-black?style=for-the-badge&logo=github")
+    .setFooter("Made with ❤", "https://raster.shields.io/badge/Sergyland-Dicord--Alert-black.png?style=for-the-badge&logo=github")
     // I don't know who is behind this website and if it'll continue to work!
     .setImage(`https://opengraph.githubassets.com/discord-alert/${payload.repository.full_name}?width=1174&height=587`);
     
