@@ -18,6 +18,8 @@ function createMessage(context) {
     .addField("SHA", sha)
     .addField("Repo", payload.repository.html_url)
     .setFooter("Created by discord-alert, the github action!")
+    // I don't know who is behind this website and if it'll continue to work!
+    .setImage(`https://opengraph.githubassets.com/discord-alert/${payload.repository.full_name}?width=1174&height=587`)
     
     return message;
 }
