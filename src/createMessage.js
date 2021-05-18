@@ -14,12 +14,15 @@ function createMessage(context) {
 
     let {eventName, sha, workflow} = context;
     message.setTitle(eventName + " triggered " + workflow)
+    .setDescription(payload.head_commit.message)
     .setTimestamp()
+    .addField("Event", context.eventName)
+    .addField("Job", `${context.job}#${context.runNumber}`)
     .addField("SHA", sha)
     .addField("Repo", payload.repository.html_url)
-    .setFooter("Created by discord-alert, the github action!")
+    .setFooter("Made with ❤", "https://img.shields.io/badge/Sergyland-Dicord--Alert-black?style=for-the-badge&logo=github")
     // I don't know who is behind this website and if it'll continue to work!
-    .setImage(`https://opengraph.githubassets.com/discord-alert/${payload.repository.full_name}?width=1174&height=587`)
+    .setImage(`https://opengraph.githubassets.com/discord-alert/${payload.repository.full_name}?width=1174&height=587`);
     
     return message;
 }
