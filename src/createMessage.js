@@ -9,6 +9,7 @@ function createMessage(context) {
     let message = new Discord.MessageEmbed()
 
     let payload = context.payload;
+    console.log("Context: "+JSON.stringify(context, undefined,2))
     let {login, avatar_url, html_url} = payload.sender
     message.setAuthor(login, avatar_url, html_url);
 
