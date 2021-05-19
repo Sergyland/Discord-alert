@@ -1,400 +1,6 @@
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 7351:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const os = __importStar(__nccwpck_require__(2087));
-const utils_1 = __nccwpck_require__(5278);
-/**
- * Commands
- *
- * Command Format:
- *   ::name key=value,key=value::message
- *
- * Examples:
- *   ::warning::This is the message
- *   ::set-env name=MY_VAR::some value
- */
-function issueCommand(command, properties, message) {
-    const cmd = new Command(command, properties, message);
-    process.stdout.write(cmd.toString() + os.EOL);
-}
-exports.issueCommand = issueCommand;
-function issue(name, message = '') {
-    issueCommand(name, {}, message);
-}
-exports.issue = issue;
-const CMD_STRING = '::';
-class Command {
-    constructor(command, properties, message) {
-        if (!command) {
-            command = 'missing.command';
-        }
-        this.command = command;
-        this.properties = properties;
-        this.message = message;
-    }
-    toString() {
-        let cmdStr = CMD_STRING + this.command;
-        if (this.properties && Object.keys(this.properties).length > 0) {
-            cmdStr += ' ';
-            let first = true;
-            for (const key in this.properties) {
-                if (this.properties.hasOwnProperty(key)) {
-                    const val = this.properties[key];
-                    if (val) {
-                        if (first) {
-                            first = false;
-                        }
-                        else {
-                            cmdStr += ',';
-                        }
-                        cmdStr += `${key}=${escapeProperty(val)}`;
-                    }
-                }
-            }
-        }
-        cmdStr += `${CMD_STRING}${escapeData(this.message)}`;
-        return cmdStr;
-    }
-}
-function escapeData(s) {
-    return utils_1.toCommandValue(s)
-        .replace(/%/g, '%25')
-        .replace(/\r/g, '%0D')
-        .replace(/\n/g, '%0A');
-}
-function escapeProperty(s) {
-    return utils_1.toCommandValue(s)
-        .replace(/%/g, '%25')
-        .replace(/\r/g, '%0D')
-        .replace(/\n/g, '%0A')
-        .replace(/:/g, '%3A')
-        .replace(/,/g, '%2C');
-}
-//# sourceMappingURL=command.js.map
-
-/***/ }),
-
-/***/ 2186:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const command_1 = __nccwpck_require__(7351);
-const file_command_1 = __nccwpck_require__(717);
-const utils_1 = __nccwpck_require__(5278);
-const os = __importStar(__nccwpck_require__(2087));
-const path = __importStar(__nccwpck_require__(5622));
-/**
- * The code to exit an action
- */
-var ExitCode;
-(function (ExitCode) {
-    /**
-     * A code indicating that the action was successful
-     */
-    ExitCode[ExitCode["Success"] = 0] = "Success";
-    /**
-     * A code indicating that the action was a failure
-     */
-    ExitCode[ExitCode["Failure"] = 1] = "Failure";
-})(ExitCode = exports.ExitCode || (exports.ExitCode = {}));
-//-----------------------------------------------------------------------
-// Variables
-//-----------------------------------------------------------------------
-/**
- * Sets env variable for this action and future actions in the job
- * @param name the name of the variable to set
- * @param val the value of the variable. Non-string values will be converted to a string via JSON.stringify
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function exportVariable(name, val) {
-    const convertedVal = utils_1.toCommandValue(val);
-    process.env[name] = convertedVal;
-    const filePath = process.env['GITHUB_ENV'] || '';
-    if (filePath) {
-        const delimiter = '_GitHubActionsFileCommandDelimeter_';
-        const commandValue = `${name}<<${delimiter}${os.EOL}${convertedVal}${os.EOL}${delimiter}`;
-        file_command_1.issueCommand('ENV', commandValue);
-    }
-    else {
-        command_1.issueCommand('set-env', { name }, convertedVal);
-    }
-}
-exports.exportVariable = exportVariable;
-/**
- * Registers a secret which will get masked from logs
- * @param secret value of the secret
- */
-function setSecret(secret) {
-    command_1.issueCommand('add-mask', {}, secret);
-}
-exports.setSecret = setSecret;
-/**
- * Prepends inputPath to the PATH (for this action and future actions)
- * @param inputPath
- */
-function addPath(inputPath) {
-    const filePath = process.env['GITHUB_PATH'] || '';
-    if (filePath) {
-        file_command_1.issueCommand('PATH', inputPath);
-    }
-    else {
-        command_1.issueCommand('add-path', {}, inputPath);
-    }
-    process.env['PATH'] = `${inputPath}${path.delimiter}${process.env['PATH']}`;
-}
-exports.addPath = addPath;
-/**
- * Gets the value of an input.  The value is also trimmed.
- *
- * @param     name     name of the input to get
- * @param     options  optional. See InputOptions.
- * @returns   string
- */
-function getInput(name, options) {
-    const val = process.env[`INPUT_${name.replace(/ /g, '_').toUpperCase()}`] || '';
-    if (options && options.required && !val) {
-        throw new Error(`Input required and not supplied: ${name}`);
-    }
-    return val.trim();
-}
-exports.getInput = getInput;
-/**
- * Sets the value of an output.
- *
- * @param     name     name of the output to set
- * @param     value    value to store. Non-string values will be converted to a string via JSON.stringify
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function setOutput(name, value) {
-    process.stdout.write(os.EOL);
-    command_1.issueCommand('set-output', { name }, value);
-}
-exports.setOutput = setOutput;
-/**
- * Enables or disables the echoing of commands into stdout for the rest of the step.
- * Echoing is disabled by default if ACTIONS_STEP_DEBUG is not set.
- *
- */
-function setCommandEcho(enabled) {
-    command_1.issue('echo', enabled ? 'on' : 'off');
-}
-exports.setCommandEcho = setCommandEcho;
-//-----------------------------------------------------------------------
-// Results
-//-----------------------------------------------------------------------
-/**
- * Sets the action status to failed.
- * When the action exits it will be with an exit code of 1
- * @param message add error issue message
- */
-function setFailed(message) {
-    process.exitCode = ExitCode.Failure;
-    error(message);
-}
-exports.setFailed = setFailed;
-//-----------------------------------------------------------------------
-// Logging Commands
-//-----------------------------------------------------------------------
-/**
- * Gets whether Actions Step Debug is on or not
- */
-function isDebug() {
-    return process.env['RUNNER_DEBUG'] === '1';
-}
-exports.isDebug = isDebug;
-/**
- * Writes debug message to user log
- * @param message debug message
- */
-function debug(message) {
-    command_1.issueCommand('debug', {}, message);
-}
-exports.debug = debug;
-/**
- * Adds an error issue
- * @param message error issue message. Errors will be converted to string via toString()
- */
-function error(message) {
-    command_1.issue('error', message instanceof Error ? message.toString() : message);
-}
-exports.error = error;
-/**
- * Adds an warning issue
- * @param message warning issue message. Errors will be converted to string via toString()
- */
-function warning(message) {
-    command_1.issue('warning', message instanceof Error ? message.toString() : message);
-}
-exports.warning = warning;
-/**
- * Writes info to log with console.log.
- * @param message info message
- */
-function info(message) {
-    process.stdout.write(message + os.EOL);
-}
-exports.info = info;
-/**
- * Begin an output group.
- *
- * Output until the next `groupEnd` will be foldable in this group
- *
- * @param name The name of the output group
- */
-function startGroup(name) {
-    command_1.issue('group', name);
-}
-exports.startGroup = startGroup;
-/**
- * End an output group.
- */
-function endGroup() {
-    command_1.issue('endgroup');
-}
-exports.endGroup = endGroup;
-/**
- * Wrap an asynchronous function call in a group.
- *
- * Returns the same type as the function itself.
- *
- * @param name The name of the group
- * @param fn The function to wrap in the group
- */
-function group(name, fn) {
-    return __awaiter(this, void 0, void 0, function* () {
-        startGroup(name);
-        let result;
-        try {
-            result = yield fn();
-        }
-        finally {
-            endGroup();
-        }
-        return result;
-    });
-}
-exports.group = group;
-//-----------------------------------------------------------------------
-// Wrapper action state
-//-----------------------------------------------------------------------
-/**
- * Saves state for current action, the state can only be retrieved by this action's post job execution.
- *
- * @param     name     name of the state to store
- * @param     value    value to store. Non-string values will be converted to a string via JSON.stringify
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function saveState(name, value) {
-    command_1.issueCommand('save-state', { name }, value);
-}
-exports.saveState = saveState;
-/**
- * Gets the value of an state set by this action's main execution.
- *
- * @param     name     name of the state to get
- * @returns   string
- */
-function getState(name) {
-    return process.env[`STATE_${name}`] || '';
-}
-exports.getState = getState;
-//# sourceMappingURL=core.js.map
-
-/***/ }),
-
-/***/ 717:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-// For internal use, subject to change.
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-// We use any as a valid input type
-/* eslint-disable @typescript-eslint/no-explicit-any */
-const fs = __importStar(__nccwpck_require__(5747));
-const os = __importStar(__nccwpck_require__(2087));
-const utils_1 = __nccwpck_require__(5278);
-function issueCommand(command, message) {
-    const filePath = process.env[`GITHUB_${command}`];
-    if (!filePath) {
-        throw new Error(`Unable to find environment variable for file command ${command}`);
-    }
-    if (!fs.existsSync(filePath)) {
-        throw new Error(`Missing file at path: ${filePath}`);
-    }
-    fs.appendFileSync(filePath, `${utils_1.toCommandValue(message)}${os.EOL}`, {
-        encoding: 'utf8'
-    });
-}
-exports.issueCommand = issueCommand;
-//# sourceMappingURL=file-command.js.map
-
-/***/ }),
-
-/***/ 5278:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-// We use any as a valid input type
-/* eslint-disable @typescript-eslint/no-explicit-any */
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-/**
- * Sanitizes an input into a string so it can be passed into issueCommand safely
- * @param input input to sanitize into a string
- */
-function toCommandValue(input) {
-    if (input === null || input === undefined) {
-        return '';
-    }
-    else if (typeof input === 'string' || input instanceof String) {
-        return input;
-    }
-    return JSON.stringify(input);
-}
-exports.toCommandValue = toCommandValue;
-//# sourceMappingURL=utils.js.map
-
-/***/ }),
-
 /***/ 4087:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
@@ -2140,7 +1746,7 @@ module.exports = function(dst, src) {
 
 /***/ }),
 
-/***/ 334:
+/***/ 9379:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -2209,7 +1815,7 @@ var universalUserAgent = __nccwpck_require__(5030);
 var beforeAfterHook = __nccwpck_require__(3682);
 var request = __nccwpck_require__(6234);
 var graphql = __nccwpck_require__(8467);
-var authToken = __nccwpck_require__(334);
+var authToken = __nccwpck_require__(9379);
 
 function _objectWithoutPropertiesLoose(source, excluded) {
   if (source == null) return {};
@@ -29291,126 +28897,6 @@ module.exports = Util;
 
 /***/ }),
 
-/***/ 2437:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-/* @flow */
-/*::
-
-type DotenvParseOptions = {
-  debug?: boolean
-}
-
-// keys and values from src
-type DotenvParseOutput = { [string]: string }
-
-type DotenvConfigOptions = {
-  path?: string, // path to .env file
-  encoding?: string, // encoding of .env file
-  debug?: string // turn on logging for debugging purposes
-}
-
-type DotenvConfigOutput = {
-  parsed?: DotenvParseOutput,
-  error?: Error
-}
-
-*/
-
-const fs = __nccwpck_require__(5747)
-const path = __nccwpck_require__(5622)
-
-function log (message /*: string */) {
-  console.log(`[dotenv][DEBUG] ${message}`)
-}
-
-const NEWLINE = '\n'
-const RE_INI_KEY_VAL = /^\s*([\w.-]+)\s*=\s*(.*)?\s*$/
-const RE_NEWLINES = /\\n/g
-const NEWLINES_MATCH = /\r\n|\n|\r/
-
-// Parses src into an Object
-function parse (src /*: string | Buffer */, options /*: ?DotenvParseOptions */) /*: DotenvParseOutput */ {
-  const debug = Boolean(options && options.debug)
-  const obj = {}
-
-  // convert Buffers before splitting into lines and processing
-  src.toString().split(NEWLINES_MATCH).forEach(function (line, idx) {
-    // matching "KEY' and 'VAL' in 'KEY=VAL'
-    const keyValueArr = line.match(RE_INI_KEY_VAL)
-    // matched?
-    if (keyValueArr != null) {
-      const key = keyValueArr[1]
-      // default undefined or missing values to empty string
-      let val = (keyValueArr[2] || '')
-      const end = val.length - 1
-      const isDoubleQuoted = val[0] === '"' && val[end] === '"'
-      const isSingleQuoted = val[0] === "'" && val[end] === "'"
-
-      // if single or double quoted, remove quotes
-      if (isSingleQuoted || isDoubleQuoted) {
-        val = val.substring(1, end)
-
-        // if double quoted, expand newlines
-        if (isDoubleQuoted) {
-          val = val.replace(RE_NEWLINES, NEWLINE)
-        }
-      } else {
-        // remove surrounding whitespace
-        val = val.trim()
-      }
-
-      obj[key] = val
-    } else if (debug) {
-      log(`did not match key and value when parsing line ${idx + 1}: ${line}`)
-    }
-  })
-
-  return obj
-}
-
-// Populates process.env from .env file
-function config (options /*: ?DotenvConfigOptions */) /*: DotenvConfigOutput */ {
-  let dotenvPath = path.resolve(process.cwd(), '.env')
-  let encoding /*: string */ = 'utf8'
-  let debug = false
-
-  if (options) {
-    if (options.path != null) {
-      dotenvPath = options.path
-    }
-    if (options.encoding != null) {
-      encoding = options.encoding
-    }
-    if (options.debug != null) {
-      debug = true
-    }
-  }
-
-  try {
-    // specifying an encoding returns a string instead of a buffer
-    const parsed = parse(fs.readFileSync(dotenvPath, { encoding }), { debug })
-
-    Object.keys(parsed).forEach(function (key) {
-      if (!Object.prototype.hasOwnProperty.call(process.env, key)) {
-        process.env[key] = parsed[key]
-      } else if (debug) {
-        log(`"${key}" is already defined in \`process.env\` and will not be overwritten`)
-      }
-    })
-
-    return { parsed }
-  } catch (e) {
-    return { error: e }
-  }
-}
-
-module.exports.config = config
-module.exports.parse = parse
-
-
-/***/ }),
-
 /***/ 4697:
 /***/ ((module, exports) => {
 
@@ -37588,30 +37074,51 @@ function socketOnError() {
 
 /***/ }),
 
-/***/ 4553:
+/***/ 1319:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
+var context;
+
+if (!process.env.GITHUB_ACTIONS){
+    __nccwpck_require__(334).config()
+    context = __nccwpck_require__(808);
+} else {
+    context = __nccwpck_require__(5438).context;
+}
+
+module.exports = context;
+
+/***/ }),
+
+/***/ 4469:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+// This fonction create an embed after some events, such as a push.
 const Discord = __nccwpck_require__(5973)
 
-function createMessage(context) {
+function createEmbed(context) {
     if(!context) {
-        throw new Error("No context passed to the message constructor")
+        throw new Error("No context passed to the embed constructor");
     }
     
-    let message = new Discord.MessageEmbed()
-
+    let embed = new Discord.MessageEmbed();
     let payload = context.payload;
-    console.log("Context: "+JSON.stringify(context, undefined,2))
-    let {login, avatar_url, html_url} = payload.sender
-    message.setAuthor(login, avatar_url, html_url);
+    console.error(payload)
+
+    let {login, avatar_url, html_url} = payload.sender;
+    embed.setAuthor(login, avatar_url, html_url);
 
     let {eventName, sha, workflow} = context;
-    message.setTitle(eventName + " triggered " + workflow)
-    .setDescription(
-        payload.head_commit?.message //Case if push
-        || payload.workflow_run?.head_commit?.message //Case if worklow_run
-        || "No description can be provided."
-    )
+    
+    let description = payload.head_commit ?
+        payload.head_commit.message
+        : payload.workflow_run ?
+        payload.workflow_run.head_commit.message
+        : "No description can be provided."
+    ;
+    
+    embed.setTitle(eventName + " triggered " + workflow)
+    .setDescription(description)
     .setTimestamp()
     .addField("Event", context.eventName)
     .addField("Job", `${context.job}#${context.runNumber}`)
@@ -37621,12 +37128,27 @@ function createMessage(context) {
     // I don't know who is behind this website and if it'll continue to work!
     .setImage(`https://opengraph.githubassets.com/discord-alert/${payload.repository.full_name}?width=1174&height=587`);
     
-    return message;
+    return embed;
 }
 
-function createMessageTitle(context) {
-    let {eventName} = context
+module.exports = createEmbed;
+
+/***/ }),
+
+/***/ 4553:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const createEmbed = __nccwpck_require__(4469)
+
+function createMessage(context) {
+    let message = "Test with refactor!";
+    let embed = createEmbed(context);
+    return {
+        content : message,
+        embed : embed ? embed : null
+    };
 }
+
 module.exports = createMessage
 
 /***/ }),
@@ -37695,11 +37217,11 @@ module.exports = JSON.parse('{"application/1d-interleaved-parityfec":{"source":"
 
 /***/ }),
 
-/***/ 8010:
+/***/ 808:
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"eventName":"workflow_run","sha":"9482de32d1e85945495d54df3f3065f9a5f9a427","ref":"refs/heads/main","workflow":"Discord Alert - Workflow complete","action":"Sergylanddiscord-alert","actor":"serge55555","job":"Alert","runNumber":3,"runId":854258913,"apiUrl":"https://api.github.com","serverUrl":"https://github.com","graphqlUrl":"https://api.github.com/graphql","payload":{"action":"completed","organization":{"avatar_url":"https://avatars.githubusercontent.com/u/71517789?v=4","description":"Building browser-based products.","events_url":"https://api.github.com/orgs/Sergyland/events","hooks_url":"https://api.github.com/orgs/Sergyland/hooks","id":71517789,"issues_url":"https://api.github.com/orgs/Sergyland/issues","login":"Sergyland","members_url":"https://api.github.com/orgs/Sergyland/members{/member}","node_id":"MDEyOk9yZ2FuaXphdGlvbjcxNTE3Nzg5","public_members_url":"https://api.github.com/orgs/Sergyland/public_members{/member}","repos_url":"https://api.github.com/orgs/Sergyland/repos","url":"https://api.github.com/orgs/Sergyland"},"repository":{"archive_url":"https://api.github.com/repos/Sergyland/Discord-alert/{archive_format}{/ref}","archived":false,"assignees_url":"https://api.github.com/repos/Sergyland/Discord-alert/assignees{/user}","blobs_url":"https://api.github.com/repos/Sergyland/Discord-alert/git/blobs{/sha}","branches_url":"https://api.github.com/repos/Sergyland/Discord-alert/branches{/branch}","clone_url":"https://github.com/Sergyland/Discord-alert.git","collaborators_url":"https://api.github.com/repos/Sergyland/Discord-alert/collaborators{/collaborator}","comments_url":"https://api.github.com/repos/Sergyland/Discord-alert/comments{/number}","commits_url":"https://api.github.com/repos/Sergyland/Discord-alert/commits{/sha}","compare_url":"https://api.github.com/repos/Sergyland/Discord-alert/compare/{base}...{head}","contents_url":"https://api.github.com/repos/Sergyland/Discord-alert/contents/{+path}","contributors_url":"https://api.github.com/repos/Sergyland/Discord-alert/contributors","created_at":"2021-05-17T19:00:40Z","default_branch":"main","deployments_url":"https://api.github.com/repos/Sergyland/Discord-alert/deployments","description":null,"disabled":false,"downloads_url":"https://api.github.com/repos/Sergyland/Discord-alert/downloads","events_url":"https://api.github.com/repos/Sergyland/Discord-alert/events","fork":false,"forks":0,"forks_count":0,"forks_url":"https://api.github.com/repos/Sergyland/Discord-alert/forks","full_name":"Sergyland/Discord-alert","git_commits_url":"https://api.github.com/repos/Sergyland/Discord-alert/git/commits{/sha}","git_refs_url":"https://api.github.com/repos/Sergyland/Discord-alert/git/refs{/sha}","git_tags_url":"https://api.github.com/repos/Sergyland/Discord-alert/git/tags{/sha}","git_url":"git://github.com/Sergyland/Discord-alert.git","has_downloads":true,"has_issues":true,"has_pages":false,"has_projects":true,"has_wiki":true,"homepage":null,"hooks_url":"https://api.github.com/repos/Sergyland/Discord-alert/hooks","html_url":"https://github.com/Sergyland/Discord-alert","id":368293260,"issue_comment_url":"https://api.github.com/repos/Sergyland/Discord-alert/issues/comments{/number}","issue_events_url":"https://api.github.com/repos/Sergyland/Discord-alert/issues/events{/number}","issues_url":"https://api.github.com/repos/Sergyland/Discord-alert/issues{/number}","keys_url":"https://api.github.com/repos/Sergyland/Discord-alert/keys{/key_id}","labels_url":"https://api.github.com/repos/Sergyland/Discord-alert/labels{/name}","language":"JavaScript","languages_url":"https://api.github.com/repos/Sergyland/Discord-alert/languages","license":null,"merges_url":"https://api.github.com/repos/Sergyland/Discord-alert/merges","milestones_url":"https://api.github.com/repos/Sergyland/Discord-alert/milestones{/number}","mirror_url":null,"name":"Discord-alert","node_id":"MDEwOlJlcG9zaXRvcnkzNjgyOTMyNjA=","notifications_url":"https://api.github.com/repos/Sergyland/Discord-alert/notifications{?since,all,participating}","open_issues":0,"open_issues_count":0,"owner":{"avatar_url":"https://avatars.githubusercontent.com/u/71517789?v=4","events_url":"https://api.github.com/users/Sergyland/events{/privacy}","followers_url":"https://api.github.com/users/Sergyland/followers","following_url":"https://api.github.com/users/Sergyland/following{/other_user}","gists_url":"https://api.github.com/users/Sergyland/gists{/gist_id}","gravatar_id":"","html_url":"https://github.com/Sergyland","id":71517789,"login":"Sergyland","node_id":"MDEyOk9yZ2FuaXphdGlvbjcxNTE3Nzg5","organizations_url":"https://api.github.com/users/Sergyland/orgs","received_events_url":"https://api.github.com/users/Sergyland/received_events","repos_url":"https://api.github.com/users/Sergyland/repos","site_admin":false,"starred_url":"https://api.github.com/users/Sergyland/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/Sergyland/subscriptions","type":"Organization","url":"https://api.github.com/users/Sergyland"},"private":false,"pulls_url":"https://api.github.com/repos/Sergyland/Discord-alert/pulls{/number}","pushed_at":"2021-05-18T18:10:30Z","releases_url":"https://api.github.com/repos/Sergyland/Discord-alert/releases{/id}","size":473,"ssh_url":"git@github.com:Sergyland/Discord-alert.git","stargazers_count":0,"stargazers_url":"https://api.github.com/repos/Sergyland/Discord-alert/stargazers","statuses_url":"https://api.github.com/repos/Sergyland/Discord-alert/statuses/{sha}","subscribers_url":"https://api.github.com/repos/Sergyland/Discord-alert/subscribers","subscription_url":"https://api.github.com/repos/Sergyland/Discord-alert/subscription","svn_url":"https://github.com/Sergyland/Discord-alert","tags_url":"https://api.github.com/repos/Sergyland/Discord-alert/tags","teams_url":"https://api.github.com/repos/Sergyland/Discord-alert/teams","trees_url":"https://api.github.com/repos/Sergyland/Discord-alert/git/trees{/sha}","updated_at":"2021-05-18T18:10:33Z","url":"https://api.github.com/repos/Sergyland/Discord-alert","watchers":0,"watchers_count":0},"sender":{"avatar_url":"https://avatars.githubusercontent.com/u/20978989?v=4","events_url":"https://api.github.com/users/serge55555/events{/privacy}","followers_url":"https://api.github.com/users/serge55555/followers","following_url":"https://api.github.com/users/serge55555/following{/other_user}","gists_url":"https://api.github.com/users/serge55555/gists{/gist_id}","gravatar_id":"","html_url":"https://github.com/serge55555","id":20978989,"login":"serge55555","node_id":"MDQ6VXNlcjIwOTc4OTg5","organizations_url":"https://api.github.com/users/serge55555/orgs","received_events_url":"https://api.github.com/users/serge55555/received_events","repos_url":"https://api.github.com/users/serge55555/repos","site_admin":false,"starred_url":"https://api.github.com/users/serge55555/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/serge55555/subscriptions","type":"User","url":"https://api.github.com/users/serge55555"},"workflow":{"badge_url":"https://github.com/Sergyland/Discord-alert/workflows/Discord-Alert/badge.svg","created_at":"2021-05-17T19:13:18.000Z","html_url":"https://github.com/Sergyland/Discord-alert/blob/main/.github/workflows/discord-alert-on-push.yml","id":9134855,"name":"Discord-Alert","node_id":"MDg6V29ya2Zsb3c5MTM0ODU1","path":".github/workflows/discord-alert-on-push.yml","state":"active","updated_at":"2021-05-17T19:13:18.000Z","url":"https://api.github.com/repos/Sergyland/Discord-alert/actions/workflows/9134855"},"workflow_run":{"artifacts_url":"https://api.github.com/repos/Sergyland/Discord-alert/actions/runs/854258324/artifacts","cancel_url":"https://api.github.com/repos/Sergyland/Discord-alert/actions/runs/854258324/cancel","check_suite_id":2771838437,"check_suite_node_id":"MDEwOkNoZWNrU3VpdGUyNzcxODM4NDM3","check_suite_url":"https://api.github.com/repos/Sergyland/Discord-alert/check-suites/2771838437","conclusion":"success","created_at":"2021-05-18T18:10:32Z","event":"push","head_branch":"main","head_commit":{"author":{"email":"serge55555@hotmail.fr","name":"serge55555"},"committer":{"email":"serge55555@hotmail.fr","name":"serge55555"},"id":"9482de32d1e85945495d54df3f3065f9a5f9a427","message":"Console log context for actions triggered by worflow_run","timestamp":"2021-05-18T18:10:23Z","tree_id":"842ac6f8dee86b65ab9759ba887a02188e941108"},"head_repository":{"archive_url":"https://api.github.com/repos/Sergyland/Discord-alert/{archive_format}{/ref}","assignees_url":"https://api.github.com/repos/Sergyland/Discord-alert/assignees{/user}","blobs_url":"https://api.github.com/repos/Sergyland/Discord-alert/git/blobs{/sha}","branches_url":"https://api.github.com/repos/Sergyland/Discord-alert/branches{/branch}","collaborators_url":"https://api.github.com/repos/Sergyland/Discord-alert/collaborators{/collaborator}","comments_url":"https://api.github.com/repos/Sergyland/Discord-alert/comments{/number}","commits_url":"https://api.github.com/repos/Sergyland/Discord-alert/commits{/sha}","compare_url":"https://api.github.com/repos/Sergyland/Discord-alert/compare/{base}...{head}","contents_url":"https://api.github.com/repos/Sergyland/Discord-alert/contents/{+path}","contributors_url":"https://api.github.com/repos/Sergyland/Discord-alert/contributors","deployments_url":"https://api.github.com/repos/Sergyland/Discord-alert/deployments","description":null,"downloads_url":"https://api.github.com/repos/Sergyland/Discord-alert/downloads","events_url":"https://api.github.com/repos/Sergyland/Discord-alert/events","fork":false,"forks_url":"https://api.github.com/repos/Sergyland/Discord-alert/forks","full_name":"Sergyland/Discord-alert","git_commits_url":"https://api.github.com/repos/Sergyland/Discord-alert/git/commits{/sha}","git_refs_url":"https://api.github.com/repos/Sergyland/Discord-alert/git/refs{/sha}","git_tags_url":"https://api.github.com/repos/Sergyland/Discord-alert/git/tags{/sha}","hooks_url":"https://api.github.com/repos/Sergyland/Discord-alert/hooks","html_url":"https://github.com/Sergyland/Discord-alert","id":368293260,"issue_comment_url":"https://api.github.com/repos/Sergyland/Discord-alert/issues/comments{/number}","issue_events_url":"https://api.github.com/repos/Sergyland/Discord-alert/issues/events{/number}","issues_url":"https://api.github.com/repos/Sergyland/Discord-alert/issues{/number}","keys_url":"https://api.github.com/repos/Sergyland/Discord-alert/keys{/key_id}","labels_url":"https://api.github.com/repos/Sergyland/Discord-alert/labels{/name}","languages_url":"https://api.github.com/repos/Sergyland/Discord-alert/languages","merges_url":"https://api.github.com/repos/Sergyland/Discord-alert/merges","milestones_url":"https://api.github.com/repos/Sergyland/Discord-alert/milestones{/number}","name":"Discord-alert","node_id":"MDEwOlJlcG9zaXRvcnkzNjgyOTMyNjA=","notifications_url":"https://api.github.com/repos/Sergyland/Discord-alert/notifications{?since,all,participating}","owner":{"avatar_url":"https://avatars.githubusercontent.com/u/71517789?v=4","events_url":"https://api.github.com/users/Sergyland/events{/privacy}","followers_url":"https://api.github.com/users/Sergyland/followers","following_url":"https://api.github.com/users/Sergyland/following{/other_user}","gists_url":"https://api.github.com/users/Sergyland/gists{/gist_id}","gravatar_id":"","html_url":"https://github.com/Sergyland","id":71517789,"login":"Sergyland","node_id":"MDEyOk9yZ2FuaXphdGlvbjcxNTE3Nzg5","organizations_url":"https://api.github.com/users/Sergyland/orgs","received_events_url":"https://api.github.com/users/Sergyland/received_events","repos_url":"https://api.github.com/users/Sergyland/repos","site_admin":false,"starred_url":"https://api.github.com/users/Sergyland/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/Sergyland/subscriptions","type":"Organization","url":"https://api.github.com/users/Sergyland"},"private":false,"pulls_url":"https://api.github.com/repos/Sergyland/Discord-alert/pulls{/number}","releases_url":"https://api.github.com/repos/Sergyland/Discord-alert/releases{/id}","stargazers_url":"https://api.github.com/repos/Sergyland/Discord-alert/stargazers","statuses_url":"https://api.github.com/repos/Sergyland/Discord-alert/statuses/{sha}","subscribers_url":"https://api.github.com/repos/Sergyland/Discord-alert/subscribers","subscription_url":"https://api.github.com/repos/Sergyland/Discord-alert/subscription","tags_url":"https://api.github.com/repos/Sergyland/Discord-alert/tags","teams_url":"https://api.github.com/repos/Sergyland/Discord-alert/teams","trees_url":"https://api.github.com/repos/Sergyland/Discord-alert/git/trees{/sha}","url":"https://api.github.com/repos/Sergyland/Discord-alert"},"head_sha":"9482de32d1e85945495d54df3f3065f9a5f9a427","html_url":"https://github.com/Sergyland/Discord-alert/actions/runs/854258324","id":854258324,"jobs_url":"https://api.github.com/repos/Sergyland/Discord-alert/actions/runs/854258324/jobs","logs_url":"https://api.github.com/repos/Sergyland/Discord-alert/actions/runs/854258324/logs","name":"Discord-Alert","node_id":"WFR_lAHOBENGXc4V87WMzjLq8pQ","pull_requests":[],"repository":{"archive_url":"https://api.github.com/repos/Sergyland/Discord-alert/{archive_format}{/ref}","assignees_url":"https://api.github.com/repos/Sergyland/Discord-alert/assignees{/user}","blobs_url":"https://api.github.com/repos/Sergyland/Discord-alert/git/blobs{/sha}","branches_url":"https://api.github.com/repos/Sergyland/Discord-alert/branches{/branch}","collaborators_url":"https://api.github.com/repos/Sergyland/Discord-alert/collaborators{/collaborator}","comments_url":"https://api.github.com/repos/Sergyland/Discord-alert/comments{/number}","commits_url":"https://api.github.com/repos/Sergyland/Discord-alert/commits{/sha}","compare_url":"https://api.github.com/repos/Sergyland/Discord-alert/compare/{base}...{head}","contents_url":"https://api.github.com/repos/Sergyland/Discord-alert/contents/{+path}","contributors_url":"https://api.github.com/repos/Sergyland/Discord-alert/contributors","deployments_url":"https://api.github.com/repos/Sergyland/Discord-alert/deployments","description":null,"downloads_url":"https://api.github.com/repos/Sergyland/Discord-alert/downloads","events_url":"https://api.github.com/repos/Sergyland/Discord-alert/events","fork":false,"forks_url":"https://api.github.com/repos/Sergyland/Discord-alert/forks","full_name":"Sergyland/Discord-alert","git_commits_url":"https://api.github.com/repos/Sergyland/Discord-alert/git/commits{/sha}","git_refs_url":"https://api.github.com/repos/Sergyland/Discord-alert/git/refs{/sha}","git_tags_url":"https://api.github.com/repos/Sergyland/Discord-alert/git/tags{/sha}","hooks_url":"https://api.github.com/repos/Sergyland/Discord-alert/hooks","html_url":"https://github.com/Sergyland/Discord-alert","id":368293260,"issue_comment_url":"https://api.github.com/repos/Sergyland/Discord-alert/issues/comments{/number}","issue_events_url":"https://api.github.com/repos/Sergyland/Discord-alert/issues/events{/number}","issues_url":"https://api.github.com/repos/Sergyland/Discord-alert/issues{/number}","keys_url":"https://api.github.com/repos/Sergyland/Discord-alert/keys{/key_id}","labels_url":"https://api.github.com/repos/Sergyland/Discord-alert/labels{/name}","languages_url":"https://api.github.com/repos/Sergyland/Discord-alert/languages","merges_url":"https://api.github.com/repos/Sergyland/Discord-alert/merges","milestones_url":"https://api.github.com/repos/Sergyland/Discord-alert/milestones{/number}","name":"Discord-alert","node_id":"MDEwOlJlcG9zaXRvcnkzNjgyOTMyNjA=","notifications_url":"https://api.github.com/repos/Sergyland/Discord-alert/notifications{?since,all,participating}","owner":{"avatar_url":"https://avatars.githubusercontent.com/u/71517789?v=4","events_url":"https://api.github.com/users/Sergyland/events{/privacy}","followers_url":"https://api.github.com/users/Sergyland/followers","following_url":"https://api.github.com/users/Sergyland/following{/other_user}","gists_url":"https://api.github.com/users/Sergyland/gists{/gist_id}","gravatar_id":"","html_url":"https://github.com/Sergyland","id":71517789,"login":"Sergyland","node_id":"MDEyOk9yZ2FuaXphdGlvbjcxNTE3Nzg5","organizations_url":"https://api.github.com/users/Sergyland/orgs","received_events_url":"https://api.github.com/users/Sergyland/received_events","repos_url":"https://api.github.com/users/Sergyland/repos","site_admin":false,"starred_url":"https://api.github.com/users/Sergyland/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/Sergyland/subscriptions","type":"Organization","url":"https://api.github.com/users/Sergyland"},"private":false,"pulls_url":"https://api.github.com/repos/Sergyland/Discord-alert/pulls{/number}","releases_url":"https://api.github.com/repos/Sergyland/Discord-alert/releases{/id}","stargazers_url":"https://api.github.com/repos/Sergyland/Discord-alert/stargazers","statuses_url":"https://api.github.com/repos/Sergyland/Discord-alert/statuses/{sha}","subscribers_url":"https://api.github.com/repos/Sergyland/Discord-alert/subscribers","subscription_url":"https://api.github.com/repos/Sergyland/Discord-alert/subscription","tags_url":"https://api.github.com/repos/Sergyland/Discord-alert/tags","teams_url":"https://api.github.com/repos/Sergyland/Discord-alert/teams","trees_url":"https://api.github.com/repos/Sergyland/Discord-alert/git/trees{/sha}","url":"https://api.github.com/repos/Sergyland/Discord-alert"},"rerun_url":"https://api.github.com/repos/Sergyland/Discord-alert/actions/runs/854258324/rerun","run_number":22,"status":"completed","updated_at":"2021-05-18T18:10:48Z","url":"https://api.github.com/repos/Sergyland/Discord-alert/actions/runs/854258324","workflow_id":9134855,"workflow_url":"https://api.github.com/repos/Sergyland/Discord-alert/actions/workflows/9134855"}}}');
+module.exports = JSON.parse('{"eventName":"push local","sha":"1132b4f7e31f339dab2fb169e6eb96f0fd6cfbb2","ref":"local","workflow":"Discord-Alert","action":"Sergylanddiscord-alert","actor":"serge55555","job":"Alert","runNumber":14,"runId":851452722,"apiUrl":"https://api.github.com","serverUrl":"https://github.com","graphqlUrl":"https://api.github.com/graphql","payload":{"after":"b7a00e77e16d3deeb3db71f2909b3c9b92eff8ae","base_ref":null,"before":"4b56b3c6223e0eaf8a8e43a03d463760987e595c","commits":[{"author":{"email":"serge55555@hotmail.fr","name":"serge55555","username":"serge55555"},"committer":{"email":"serge55555@hotmail.fr","name":"serge55555","username":"serge55555"},"distinct":true,"id":"b7a00e77e16d3deeb3db71f2909b3c9b92eff8ae","message":"output payload","timestamp":"2021-05-18T00:57:17+02:00","tree_id":"68dd0149f6faf8413c3d9166f41f50ef2b960ced","url":"https://github.com/Sergyland/Discord-alert/commit/b7a00e77e16d3deeb3db71f2909b3c9b92eff8ae"}],"compare":"https://github.com/Sergyland/Discord-alert/compare/4b56b3c6223e...b7a00e77e16d","created":false,"deleted":false,"forced":false,"head_commit":{"author":{"email":"serge55555@hotmail.fr","name":"serge55555","username":"serge55555"},"committer":{"email":"serge55555@hotmail.fr","name":"serge55555","username":"serge55555"},"distinct":true,"id":"b7a00e77e16d3deeb3db71f2909b3c9b92eff8ae","message":"output payload","timestamp":"2021-05-18T00:57:17+02:00","tree_id":"68dd0149f6faf8413c3d9166f41f50ef2b960ced","url":"https://github.com/Sergyland/Discord-alert/commit/b7a00e77e16d3deeb3db71f2909b3c9b92eff8ae"},"organization":{"avatar_url":"https://avatars.githubusercontent.com/u/71517789?v=4","description":"Building browser-based products.","events_url":"https://api.github.com/orgs/Sergyland/events","hooks_url":"https://api.github.com/orgs/Sergyland/hooks","id":71517789,"issues_url":"https://api.github.com/orgs/Sergyland/issues","login":"Sergyland","members_url":"https://api.github.com/orgs/Sergyland/members{/member}","node_id":"MDEyOk9yZ2FuaXphdGlvbjcxNTE3Nzg5","public_members_url":"https://api.github.com/orgs/Sergyland/public_members{/member}","repos_url":"https://api.github.com/orgs/Sergyland/repos","url":"https://api.github.com/orgs/Sergyland"},"pusher":{"email":"serge55555@hotmail.fr","name":"serge55555"},"ref":"refs/heads/main","repository":{"archive_url":"https://api.github.com/repos/Sergyland/Discord-alert/{archive_format}{/ref}","archived":false,"assignees_url":"https://api.github.com/repos/Sergyland/Discord-alert/assignees{/user}","blobs_url":"https://api.github.com/repos/Sergyland/Discord-alert/git/blobs{/sha}","branches_url":"https://api.github.com/repos/Sergyland/Discord-alert/branches{/branch}","clone_url":"https://github.com/Sergyland/Discord-alert.git","collaborators_url":"https://api.github.com/repos/Sergyland/Discord-alert/collaborators{/collaborator}","comments_url":"https://api.github.com/repos/Sergyland/Discord-alert/comments{/number}","commits_url":"https://api.github.com/repos/Sergyland/Discord-alert/commits{/sha}","compare_url":"https://api.github.com/repos/Sergyland/Discord-alert/compare/{base}...{head}","contents_url":"https://api.github.com/repos/Sergyland/Discord-alert/contents/{+path}","contributors_url":"https://api.github.com/repos/Sergyland/Discord-alert/contributors","created_at":1621278040,"default_branch":"main","deployments_url":"https://api.github.com/repos/Sergyland/Discord-alert/deployments","description":null,"disabled":false,"downloads_url":"https://api.github.com/repos/Sergyland/Discord-alert/downloads","events_url":"https://api.github.com/repos/Sergyland/Discord-alert/events","fork":false,"forks":0,"forks_count":0,"forks_url":"https://api.github.com/repos/Sergyland/Discord-alert/forks","full_name":"Sergyland/Discord-alert","git_commits_url":"https://api.github.com/repos/Sergyland/Discord-alert/git/commits{/sha}","git_refs_url":"https://api.github.com/repos/Sergyland/Discord-alert/git/refs{/sha}","git_tags_url":"https://api.github.com/repos/Sergyland/Discord-alert/git/tags{/sha}","git_url":"git://github.com/Sergyland/Discord-alert.git","has_downloads":true,"has_issues":true,"has_pages":false,"has_projects":true,"has_wiki":true,"homepage":null,"hooks_url":"https://api.github.com/repos/Sergyland/Discord-alert/hooks","html_url":"https://github.com/Sergyland/Discord-alert","id":368293260,"issue_comment_url":"https://api.github.com/repos/Sergyland/Discord-alert/issues/comments{/number}","issue_events_url":"https://api.github.com/repos/Sergyland/Discord-alert/issues/events{/number}","issues_url":"https://api.github.com/repos/Sergyland/Discord-alert/issues{/number}","keys_url":"https://api.github.com/repos/Sergyland/Discord-alert/keys{/key_id}","labels_url":"https://api.github.com/repos/Sergyland/Discord-alert/labels{/name}","language":"JavaScript","languages_url":"https://api.github.com/repos/Sergyland/Discord-alert/languages","license":null,"master_branch":"main","merges_url":"https://api.github.com/repos/Sergyland/Discord-alert/merges","milestones_url":"https://api.github.com/repos/Sergyland/Discord-alert/milestones{/number}","mirror_url":null,"name":"Discord-alert","node_id":"MDEwOlJlcG9zaXRvcnkzNjgyOTMyNjA=","notifications_url":"https://api.github.com/repos/Sergyland/Discord-alert/notifications{?since,all,participating}","open_issues":0,"open_issues_count":0,"organization":"Sergyland","owner":{"avatar_url":"https://avatars.githubusercontent.com/u/71517789?v=4","email":null,"events_url":"https://api.github.com/users/Sergyland/events{/privacy}","followers_url":"https://api.github.com/users/Sergyland/followers","following_url":"https://api.github.com/users/Sergyland/following{/other_user}","gists_url":"https://api.github.com/users/Sergyland/gists{/gist_id}","gravatar_id":"","html_url":"https://github.com/Sergyland","id":71517789,"login":"Sergyland","name":"Sergyland","node_id":"MDEyOk9yZ2FuaXphdGlvbjcxNTE3Nzg5","organizations_url":"https://api.github.com/users/Sergyland/orgs","received_events_url":"https://api.github.com/users/Sergyland/received_events","repos_url":"https://api.github.com/users/Sergyland/repos","site_admin":false,"starred_url":"https://api.github.com/users/Sergyland/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/Sergyland/subscriptions","type":"Organization","url":"https://api.github.com/users/Sergyland"},"private":false,"pulls_url":"https://api.github.com/repos/Sergyland/Discord-alert/pulls{/number}","pushed_at":1621292245,"releases_url":"https://api.github.com/repos/Sergyland/Discord-alert/releases{/id}","size":463,"ssh_url":"git@github.com:Sergyland/Discord-alert.git","stargazers":0,"stargazers_count":0,"stargazers_url":"https://api.github.com/repos/Sergyland/Discord-alert/stargazers","statuses_url":"https://api.github.com/repos/Sergyland/Discord-alert/statuses/{sha}","subscribers_url":"https://api.github.com/repos/Sergyland/Discord-alert/subscribers","subscription_url":"https://api.github.com/repos/Sergyland/Discord-alert/subscription","svn_url":"https://github.com/Sergyland/Discord-alert","tags_url":"https://api.github.com/repos/Sergyland/Discord-alert/tags","teams_url":"https://api.github.com/repos/Sergyland/Discord-alert/teams","trees_url":"https://api.github.com/repos/Sergyland/Discord-alert/git/trees{/sha}","updated_at":"2021-05-17T22:37:46Z","url":"https://github.com/Sergyland/Discord-alert","watchers":0,"watchers_count":0},"sender":{"avatar_url":"https://avatars.githubusercontent.com/u/20978989?v=4","events_url":"https://api.github.com/users/serge55555/events{/privacy}","followers_url":"https://api.github.com/users/serge55555/followers","following_url":"https://api.github.com/users/serge55555/following{/other_user}","gists_url":"https://api.github.com/users/serge55555/gists{/gist_id}","gravatar_id":"","html_url":"https://github.com/serge55555","id":20978989,"login":"serge55555","node_id":"MDQ6VXNlcjIwOTc4OTg5","organizations_url":"https://api.github.com/users/serge55555/orgs","received_events_url":"https://api.github.com/users/serge55555/received_events","repos_url":"https://api.github.com/users/serge55555/repos","site_admin":false,"starred_url":"https://api.github.com/users/serge55555/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/serge55555/subscriptions","type":"User","url":"https://api.github.com/users/serge55555"}}}');
 
 /***/ }),
 
@@ -37732,6 +37254,14 @@ module.exports = require("crypto");;
 
 "use strict";
 module.exports = require("dgram");;
+
+/***/ }),
+
+/***/ 334:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("dotenv");;
 
 /***/ }),
 
@@ -37878,31 +37408,28 @@ module.exports = require("zlib");;
 var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
-const core = __nccwpck_require__(2186);
-const github = __nccwpck_require__(5438);
+const context = __nccwpck_require__(1319);
 
-const Discord = __nccwpck_require__(5973);
-const createMessage = __nccwpck_require__(4553);
+async function run(context) {
+    const Discord = __nccwpck_require__(5973);
+    const createMessage = __nccwpck_require__(4553);
+    
+    const channelID = process.env.INPUT_CHANNEL_ID;
+    const discordToken = process.env.INPUT_DISCORD_TOKEN;
 
-__nccwpck_require__(2437).config();
+    if(!channelID || !discordToken) {
+        console.error("Missing paramater.");
+        process.exit(1);
+    }
 
-const context = process.env.NODE_ENV === "dev" ?
-    __nccwpck_require__(8010) :
-    github.context;
-
-const channelID = core.getInput('channel-id', {required: true});
-const discordToken = core.getInput('discord-token', {required: true});
-//const githubToken = core.getInput('github-token', {required: true});
-
-async function run() {
     let client = new Discord.Client()
     client.login(discordToken)
-
-    let mymessage = new Discord.MessageEmbed(createMessage(context))
+    console.log("test",context)
+    let message = createMessage(context)
 
     client.on("ready", () => {
         client.channels.fetch(channelID)
-        .then( channel => channel.send("Test",mymessage))
+        .then( channel => channel.send(message))
         .then(() => {
             console.log("Message Sent!")
             process.exit(0)
@@ -37915,7 +37442,7 @@ async function run() {
 
 }
 
-run()
+run(context);
 })();
 
 module.exports = __webpack_exports__;

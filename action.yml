@@ -1,13 +1,13 @@
 name: 'Discord-alert'
 description: 'This action sends discord message after certain event on your repo.'
 inputs:
-  github-token:
+  github_token:
     description: 'Token for the repo. Can be passed in using {{ secrets.GITHUB_TOKEN }}.'
     required: true
-  discord-token:
+  discord_token:
     description: 'Your discord bot access token.'
     required: true
-  channel-id:
+  channel_id:
     description: 'The discord channel ID where the bot will send message.'
     required: true
 

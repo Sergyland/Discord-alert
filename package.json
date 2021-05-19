@@ -5,16 +5,16 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node ./src/index",
-    "package": "ncc build --source-map --license licenses.txt",
+    "dev": "node ./src/dev",
+    "package": "ncc build --source-map --license licenses.txt --external dotenv --stats-out build_stats.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Serge GEORGE",
   "license": "MIT",
   "dependencies": {
-    "dotenv": "^9.0.2",
-    "@actions/core": "^1.2.7",
     "@actions/github": "^5.0.0",
-    "discord.js": "^12.5.3"
+    "discord.js": "^12.5.3",
+    "dotenv": "^9.0.2"
   },
   "devDependencies": {
     "@vercel/ncc": "^0.28.5"

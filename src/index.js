@@ -1,28 +1,25 @@
-const core = require('@actions/core');
-const github = require('@actions/github');
+const context = require('./context');
 
-const Discord = require('discord.js');
-const createMessage = require('./createMessage.js');
+async function run(context) {
+    const Discord = require('discord.js');
+    const createMessage = require('./createMessage.js');
+    
+    const channelID = process.env.INPUT_CHANNEL_ID;
+    const discordToken = process.env.INPUT_DISCORD_TOKEN;
 
-require('dotenv').config();
+    if(!channelID || !discordToken) {
+        console.error("Missing paramater.");
+        process.exit(1);
+    }
 
-const context = process.env.NODE_ENV === "dev" ?
-    require('../payload/workflow_run.json') :
-    github.context;
-
-const channelID = core.getInput('channel-id', {required: true});
-const discordToken = core.getInput('discord-token', {required: true});
-//const githubToken = core.getInput('github-token', {required: true});
-
-async function run() {
     let client = new Discord.Client()
     client.login(discordToken)
-
-    let mymessage = new Discord.MessageEmbed(createMessage(context))
+    console.log("test",context)
+    let message = createMessage(context)
 
     client.on("ready", () => {
         client.channels.fetch(channelID)
-        .then( channel => channel.send("Test",mymessage))
+        .then( channel => channel.send(message))
         .then(() => {
             console.log("Message Sent!")
             process.exit(0)
@@ -35,4 +32,4 @@ async function run() {
 
 }
 
-run()
+run(context);
