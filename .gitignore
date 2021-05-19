@@ -1,5 +1,7 @@
 node_modules/
-private/
+#This folder is used localy to mimick git responses
+payload/
+_idées.md
 # Editors
 .vscode/
 .idea/

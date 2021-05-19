@@ -1,4 +1,3 @@
-const { context } = require("@actions/github/lib/utils")
 const Discord = require("discord.js")
 
 function createMessage(context) {
@@ -15,7 +14,11 @@ function createMessage(context) {
 
     let {eventName, sha, workflow} = context;
     message.setTitle(eventName + " triggered " + workflow)
-    .setDescription(payload.head_commit.message)
+    .setDescription(
+        payload.head_commit?.message //Case if push
+        || payload.workflow_run?.head_commit?.message //Case if worklow_run
+        || "No description can be provided."
+    )
     .setTimestamp()
     .addField("Event", context.eventName)
     .addField("Job", `${context.job}#${context.runNumber}`)

@@ -2,17 +2,13 @@ const core = require('@actions/core');
 const github = require('@actions/github');
 
 const Discord = require('discord.js');
-const createMessage = require('./createMessage.js')
+const createMessage = require('./createMessage.js');
 
-let context;
+require('dotenv').config();
 
-if(!process.env.GITHUB_ACTIONS){ 
-    require('dotenv').config()
-    context = require('../dev/context.json')
-} else {
-    context = github.context 
-}
-
+const context = process.env.NODE_ENV === "dev" ?
+    require('../payload/workflow_run.json') :
+    github.context;
 
 const channelID = core.getInput('channel-id', {required: true});
 const discordToken = core.getInput('discord-token', {required: true});
@@ -26,7 +22,7 @@ async function run() {
 
     client.on("ready", () => {
         client.channels.fetch(channelID)
-        .then( channel => channel.send(mymessage))
+        .then( channel => channel.send("Test",mymessage))
         .then(() => {
             console.log("Message Sent!")
             process.exit(0)
