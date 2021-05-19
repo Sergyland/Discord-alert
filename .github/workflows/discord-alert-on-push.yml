@@ -15,6 +15,5 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: Sergyland/discord-alert@main
         with: 
-          channel-id: ${{ secrets.DISCORD_CHANNEL_ID }}
-          discord-token: ${{secrets.DISCORD_TOKEN}}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          channel_id: ${{ secrets.DISCORD_CHANNEL_ID }}
+          discord_token: ${{secrets.DISCORD_TOKEN}}
